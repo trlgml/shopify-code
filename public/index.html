@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>shopify</title>
+  <style>
+    #filePath,
+    #info {
+      height: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <form>
+    <input type="file" id="fileUpload">
+  </form>
+  <div id="filePath"></div>
+  <button id="import">导入</button>
+  <div id="info"></div>
+</body>
+<script>
+  const baseHost = 'https://bfee-111-193-1-174.jp.ngrok.io'
+  let path = ''
+  document.querySelector('#fileUpload').addEventListener('change', event => {
+    handleCvsUpload(event)
+  })
+  document.querySelector('#import').addEventListener('click', event => {
+    importData()
+  })
+  const handleCvsUpload = event => {
+    const files = event.target.files
+    const formData = new FormData()
+    formData.append('cvs', files[0])
+
+    fetch(`${baseHost}/upload`, {
+        method: 'POST',
+        body: formData
+      })
+      .then(async response => {
+        const {
+          code,
+          data
+        } = await response.json()
+        if (code === 0) {
+          document.querySelector('#filePath').innerHTML = data.path
+          path = data.path
+        }
+      })
+  }
+
+  const importData = () => {
+    if (!path) {
+      return document.querySelector('#info').innerHTML = `请先上传文件`
+    }
+    fetch(`${baseHost}/product`, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/x-www-form-urlencoded'
+        },
+        body: `path=${path}`
+      })
+      .then(async response => {
+        const {
+          code,
+          data
+        } = await response.json()
+        if (code === 0) {
+          document.querySelector('#info').innerHTML = `成功导入【${data.success}】条`
+          path = data.path
+        }
+      })
+  }
+</script>
+
+</html>
